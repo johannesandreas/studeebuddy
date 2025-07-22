@@ -104,8 +104,9 @@ async function loadBoards() {
     }
     
     try {
-        console.log('Loading boards...');
-        const response = await fetch(window.location.origin + '/api/boards', {
+        const apiUrl = window.currentConfig?.apiUrl || window.location.origin;
+        console.log('Loading boards from:', apiUrl + '/api/boards');
+        const response = await fetch(apiUrl + '/api/boards', {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
         
@@ -176,8 +177,9 @@ async function createBoard() {
     }
     
     try {
-        console.log('Sending board creation request to:', window.location.origin + '/api/boards');
-        const response = await fetch(window.location.origin + '/api/boards', {
+        const apiUrl = window.currentConfig?.apiUrl || window.location.origin;
+        console.log('Sending board creation request to:', apiUrl + '/api/boards');
+        const response = await fetch(apiUrl + '/api/boards', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
