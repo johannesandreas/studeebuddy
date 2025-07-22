@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kanban Progress Tracker</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>Kanban Progress Tracker</h1>
+            <div id="user-info" style="display: none;">
+                <span id="user-name"></span>
+                <button onclick="logout()">Logout</button>
+            </div>
+        </header>
+
+        <div id="auth-section">
+            <div class="auth-form">
+                <h2>Login</h2>
+                <form id="login-form">
+                    <input type="email" id="login-email" placeholder="Email" required>
+                    <input type="password" id="login-password" placeholder="Password" required>
+                    <button type="submit">Login</button>
+                </form>
+                <button onclick="window.location.href='/auth/google'">Login with Google</button>
+                
+                <h2>Register</h2>
+                <form id="register-form">
+                    <input type="text" id="register-name" placeholder="Name" required>
+                    <input type="email" id="register-email" placeholder="Email" required>
+                    <input type="password" id="register-password" placeholder="Password" required>
+                    <button type="submit">Register</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="main-content" style="display: none;">
+            <div class="board-selector">
+                <select id="board-select">
+                    <option value="">Select a board</option>
+                </select>
+                <button id="new-board-btn">New Board</button>
+            </div>
+
+            <div id="kanban-board">
+                <div class="column" data-status="todo">
+                    <h3>To Do</h3>
+                    <div class="tasks" id="todo-tasks"></div>
+                    <button class="add-task-btn" data-status="todo">+ Add Task</button>
+                </div>
+                <div class="column" data-status="in_progress">
+                    <h3>In Progress</h3>
+                    <div class="tasks" id="in_progress-tasks"></div>
+                    <button class="add-task-btn" data-status="in_progress">+ Add Task</button>
+                </div>
+                <div class="column" data-status="done">
+                    <h3>Done</h3>
+                    <div class="tasks" id="done-tasks"></div>
+                    <button class="add-task-btn" data-status="done">+ Add Task</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
