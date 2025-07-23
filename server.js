@@ -100,27 +100,30 @@ passport.use(new LocalStrategy({
     }
 }));
 
-passport.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "/auth/google/callback"
-}, async (accessToken, refreshToken, profile, done) => {
-    try {
-        const conn = await pool.getConnection();
-        let user = await conn.query('SELECT * FROM users WHERE google_id = ?', [profile.id]);
-        
-        if (user.length === 0) {
-            await conn.query('INSERT INTO users (email, google_id, name) VALUES (?, ?, ?)', 
-                [profile.emails[0].value, profile.id, profile.displayName]);
-            user = await conn.query('SELECT * FROM users WHERE google_id = ?', [profile.id]);
+// Only use Google strategy if credentials are provided
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+    passport.use(new GoogleStrategy({
+        clientID: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        callbackURL: "/auth/google/callback"
+    }, async (accessToken, refreshToken, profile, done) => {
+        try {
+            const conn = await pool.getConnection();
+            let user = await conn.query('SELECT * FROM users WHERE google_id = ?', [profile.id]);
+            
+            if (user.length === 0) {
+                await conn.query('INSERT INTO users (email, google_id, name) VALUES (?, ?, ?)', 
+                    [profile.emails[0].value, profile.id, profile.displayName]);
+                user = await conn.query('SELECT * FROM users WHERE google_id = ?', [profile.id]);
+            }
+            
+            conn.release();
+            return done(null, user[0]);
+        } catch (error) {
+            return done(error);
         }
-        
-        conn.release();
-        return done(null, user[0]);
-    } catch (error) {
-        return done(error);
-    }
-}));
+    }));
+}
 
 passport.serializeUser((user, done) => done(null, user.id));
 passport.deserializeUser(async (id, done) => {
@@ -188,11 +191,14 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-app.get('/auth/google/callback', passport.authenticate('google'), (req, res) => {
-    const token = jwt.sign({ id: req.user.id, email: req.user.email }, process.env.JWT_SECRET);
-    res.redirect(`/?token=${token}`);
-});
+// Only add Google routes if Google auth is configured
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+    app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+    app.get('/auth/google/callback', passport.authenticate('google'), (req, res) => {
+        const token = jwt.sign({ id: req.user.id, email: req.user.email }, process.env.JWT_SECRET);
+        res.redirect(`/?token=${token}`);
+    });
+}
 
 // Board routes
 app.get('/api/boards', authenticateToken, async (req, res) => {
