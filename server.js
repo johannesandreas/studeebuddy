@@ -12,26 +12,43 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Database connection
+// Database connection with detailed error logging
 let pool;
 try {
+    console.log('Initializing database connection...');
+    console.log('DB_HOST:', process.env.DB_HOST);
+    console.log('DB_USER:', process.env.DB_USER);
+    console.log('DB_NAME:', process.env.DB_NAME);
+    
     pool = mariadb.createPool({
         host: process.env.DB_HOST || 'localhost',
         user: process.env.DB_USER || 'root',
         password: process.env.DB_PASSWORD || '',
         database: process.env.DB_NAME || 'kanban_tracker',
         connectionLimit: 5,
-        connectTimeout: 10000
+        connectTimeout: 20000,
+        trace: true
     });
     
     // Test database connection
     pool.getConnection()
         .then(conn => {
             console.log('Database connected successfully!');
-            conn.release();
+            conn.query('SHOW TABLES')
+                .then(tables => {
+                    console.log('Tables in database:', tables);
+                    conn.release();
+                })
+                .catch(err => {
+                    console.error('Error querying tables:', err);
+                    conn.release();
+                });
         })
         .catch(err => {
             console.error('Database connection error:', err);
+            console.error('Error code:', err.code);
+            console.error('Error number:', err.errno);
+            console.error('SQL state:', err.sqlState);
         });
 } catch (error) {
     console.error('Failed to create database pool:', error);
