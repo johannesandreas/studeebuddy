@@ -13,13 +13,29 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Database connection
-const pool = mariadb.createPool({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    connectionLimit: 5
-});
+let pool;
+try {
+    pool = mariadb.createPool({
+        host: process.env.DB_HOST || 'localhost',
+        user: process.env.DB_USER || 'root',
+        password: process.env.DB_PASSWORD || '',
+        database: process.env.DB_NAME || 'kanban_tracker',
+        connectionLimit: 5,
+        connectTimeout: 10000
+    });
+    
+    // Test database connection
+    pool.getConnection()
+        .then(conn => {
+            console.log('Database connected successfully!');
+            conn.release();
+        })
+        .catch(err => {
+            console.error('Database connection error:', err);
+        });
+} catch (error) {
+    console.error('Failed to create database pool:', error);
+}
 
 // Middleware
 app.use(cors({
@@ -273,7 +289,24 @@ app.delete('/api/tasks/:taskId', authenticateToken, async (req, res) => {
     }
 });
 
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error('Server error:', err);
+    const errorMsg = process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message;
+    res.status(500).json({ error: errorMsg });
+});
+
+// Fallback route
+app.use((req, res) => {
+    res.status(404).json({ error: 'Route not found' });
+});
+
+// Start server
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`Database: ${process.env.DB_HOST || 'localhost'}`);
     console.log(`Access at: http://localhost:${PORT}`);
+}).on('error', (err) => {
+    console.error('Server failed to start:', err);
 });
