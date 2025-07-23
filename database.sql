@@ -1,5 +1,6 @@
-CREATE DATABASE IF NOT EXISTS kanban_tracker;
-USE kanban_tracker;
+-- On Hostinger, use the pre-created database
+-- No need to create database, just use the one provided
+USE u762276447_kanban;
 
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
