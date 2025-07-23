@@ -13,8 +13,25 @@ if (urlParams.get('token')) {
 // Check for stored token
 authToken = localStorage.getItem('authToken');
 if (authToken) {
-    showMainContent();
-    loadBoards();
+    // Verify token is valid for current environment
+    fetch('/api/verify-token', {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+    })
+    .then(res => {
+        if (res.ok) {
+            showMainContent();
+            loadBoards();
+        } else {
+            console.log('Invalid token, clearing...');
+            localStorage.removeItem('authToken');
+            authToken = null;
+        }
+    })
+    .catch(err => {
+        console.error('Token verification error:', err);
+        localStorage.removeItem('authToken');
+        authToken = null;
+    });
 }
 
 // Auth functions

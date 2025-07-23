@@ -27,7 +27,11 @@ try {
         database: process.env.DB_NAME || 'kanban_tracker',
         connectionLimit: 5,
         connectTimeout: 20000,
-        trace: true
+        trace: true,
+        // Fix for authentication protocol issue
+        multipleStatements: true,
+        allowPublicKeyRetrieval: true,
+        ssl: false
     });
     
     // Test database connection
@@ -155,6 +159,11 @@ const authenticateToken = (req, res, next) => {
         next();
     });
 };
+
+// Token verification endpoint
+app.get('/api/verify-token', authenticateToken, (req, res) => {
+    res.json({ valid: true, user: req.user });
+});
 
 // Routes
 app.post('/api/register', async (req, res) => {
